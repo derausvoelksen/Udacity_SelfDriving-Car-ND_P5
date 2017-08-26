@@ -22,7 +22,7 @@ The goals / steps of this project are the following:
 [image5]: ./examples/bboxes_and_heat.png
 [image6]: ./examples/labels_map.png
 [image7]: ./examples/output_bboxes.png
-[image8]: ./hog_viz.png
+[image8]: ./hog_viz.PNG
 [image9]: ./sliding_window_search_2.PNG
 [image10]: ./sliding_window_search_3.PNG
 [image11]: ./sliding_window_search_4.PNG
