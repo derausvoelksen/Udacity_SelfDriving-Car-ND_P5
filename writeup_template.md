@@ -130,7 +130,7 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Besides a hard drive crash right before turning in the project I faced performance issues, as the HOG function is not done in realtime.
+Besides a hard drive crash right before turning in the project I faced performance issues, as the HOG function is not done in realtime. This would definitively need some attention.
 
-Regarding the vehicle detection, it would be necessary to take several frames into account in order to avoid single frame detections and to better follow the detected vehicle.
+Regarding the vehicle detection, it would be necessary to take several frames into account in order to avoid jitter and single frame detections, and to overall better follow the detected vehicles.
 
