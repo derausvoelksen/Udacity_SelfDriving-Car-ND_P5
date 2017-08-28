@@ -98,13 +98,13 @@ I trained a linear SVM in cell 8 and achieved a accuracy of 98,59% on the test d
 
 I printed several window sizes and regions in order to determine size and area within the camera image. Dependent on the distance to the ego vehicle, I chose only a small region, so the computation would be as fast as possible. Here are the resulting areas within the image:
 
-Windows of size 64x64:
+* Windows of size 64x64:
 ![Sliding Window (64x64)][image9]
-Windows of size 96x96:
+* Windows of size 96x96:
 ![Sliding Window (96x96)][image10]
-Windows of size 128x128:
+* Windows of size 128x128:
 ![Sliding Window (128x128)][image11]
-Windows of size 196x196:
+* Windows of size 196x196:
 ![Sliding Window (196x196)][image12]
 
 
