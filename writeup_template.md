@@ -22,11 +22,18 @@ The goals / steps of this project are the following:
 [image5]: ./examples/bboxes_and_heat.png
 [image6]: ./examples/labels_map.png
 [image7]: ./examples/output_bboxes.png
-[image8]: ./hog_viz.PNG
-[image9]: ./sliding_window_search_2.PNG
-[image10]: ./sliding_window_search_3.PNG
-[image11]: ./sliding_window_search_4.PNG
-[image12]: ./heatmaps.PNG
+[image8]: ./output_images/hog_viz.PNG
+[image9]: ./output_images/sliding_window_64.png
+[image10]: ./output_images/sliding_window_96.png
+[image11]: ./output_images/sliding_window_128.png
+[image12]: ./output_images/sliding_window_196.png
+[image13]: ./output_images/pipeline_single_frame.PNG
+[image14]: ./output_images/heatmap_1.PNG
+[image15]: ./output_images/heatmap_2.PNG
+[image16]: ./output_images/heatmap_3.PNG
+[image17]: ./output_images/heatmap_4.PNG
+[image18]: ./output_images/heatmap_5.PNG
+
 
 [video1]: ./project_video_out_cs.mp4
 
@@ -44,11 +51,13 @@ You're reading it!
 
 ####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for this step is contained in the second code cell of the IPython notebook VehicleDetect.ipynb. Its parameters are defined in the 5th cell.
-
-In cell 4 all the `vehicle` and `non-vehicle` images are read in.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
+In cell 3 all the `vehicle` and `non-vehicle` images are read in.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
 ![alt text][image1]
+
+The code for the HOG feature extract is contained in the fifth code cell of the IPython notebook VehicleDetect.ipynb.
+
+
 
 I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
 
@@ -59,18 +68,23 @@ Here is an example using the `YCrCb` color space and HOG parameters of `orientat
 
 ####2. Explain how you settled on your final choice of HOG parameters.
 
-I started off with RGB and 12 orientations and 12 pixels per cell. I then reduced the number of orientations to 9, as I could not make out any improvements by using 12. I reduced the number of pixels to 8 pixels per cell. I then tried out the other color spaces, however `StandardScaler().fit` gave me error messages which I was not able to fix. So I stayed with RGB, and got a decent detection result.
-So the final parameters, which I kept constant from then on, are the following:
+I got the advice, that RGB color space wasnt the best choice, so I turned to try out YUV. I tried to benchmark with the parameters `orient`, `pix_per_cell`, `cell_per_block`, and found out, that having set the below quoted parameters are the fastest on my machine, but still resulted in a decent vehicle detection. Especially the histogram and spatial binning did not enhance the detection but caused a larger feature vector:
+
 
 ```python
-color_space = 'RGB' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-orient = 9  # HOG orientations
-pix_per_cell = 8 # HOG pixels per cell
-cell_per_block = 2 # HOG cells per block
-hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL" 
+color_space = 'YUV' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+orient = 12
+pix_per_cell = 16
+cell_per_block = 2
+hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
+spatial_size = (16, 16) # Spatial binning dimensions
+hist_bins = 64    # Number of histogram bins
+spatial_feat = False # Spatial features on or off
+hist_feat = False # Histogram features on or off
+hog_feat = True # HOG features on or off
 ```
 
-This is an example of the HOG Vizualization:
+Cell four shows an example of a HOG Vizualization:
 ![HOG Vizualization][image8]
 
 
@@ -86,18 +100,22 @@ hist_bins = 64    # Number of histogram bins
 
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-I used the sliding window search that was introduced in the lessons. I used the 64 by 64 window size, and an overlapping of 75%. For optimization issues I only used  the Y coordinates from 400 to 656.
-
-![alt text][image3]
+I printed several window sizes and regions in order to determine size and area within the camera image. Dependent on the distance to the ego vehicle, I chose only a small region, so the computation would be as fast as possible. Here are the resulting areas within the image:
+![Sliding Window (64x64)][image9]
+![Sliding Window (96x96)][image10]
+![Sliding Window (128x128)][image11]
+![Sliding Window (196x196)][image12]
 
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some more example images, based on the example images given:
+I created the `pipeline_single_frame` function in order to automate the steps of feature extraction, applying the heatmap, labeling and drawing the bounding boxes onto the image (cell 25).
 
-![alt text][image9]
-![alt text][image10]
-![alt text][image11]
+![Pipeline][image13]
+
+As stated above, I did not make use of the histogram and spatial binning, and chose carefully the sliding window area within the image. The HOG parameters were chosen so that the detection of vehicles still work, but also result in a decent computation time (but not real time on my computer).
+
+
 ---
 
 ### Video Implementation
@@ -108,20 +126,20 @@ Here's a [link to my video result](./project_video_out_cs.mp4)
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+For eliminating false positive detections, I first used the heatmap and labeling.
 
-Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
+### Here is a sequence of images showing the heatmap in operation:
 
-### Here are six frames and their corresponding heatmaps:
+![Feature extraction][image14]
+![applying heatmap][image15]
+![applying threshold][image16]
+![applying lables][image17]
+![drawing bounding boxes][image18]
 
-![alt text][image12]
+Depending on the number of independent labels (output of `labels[1]`), there are drawn boxes around the most outer pixels if the label area. If a heat spot is not separated by black pixels, then it will be detected as a single car.
 
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
 
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
-
+In order to further avoid false positives the detections of the past 15 frames are stored and added to a heatmap (see function `pipeline_history`. Then, a threshold is applyed to this heatmap to cut out wrong detections over the past frames.
 
 
 ---
@@ -130,7 +148,7 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Besides a hard drive crash right before turning in the project I faced performance issues, as the HOG function is not done in realtime. This would definitively need some attention.
+It was hard to find a decent balance between computation time and detection accuracy, and I believe it still could be improved. One idea would be to have a dynamic search around a detected vehicle taking its estimated velocity into account.
 
-Regarding the vehicle detection, it would be necessary to take several frames into account in order to avoid jitter and single frame detections, and to overall better follow the detected vehicles.
+The pipeline will probably fail on situations that have not been trained (rain, night, sunlight,..).
 
