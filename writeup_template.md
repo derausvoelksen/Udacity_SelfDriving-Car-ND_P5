@@ -90,11 +90,7 @@ Cell four shows an example of a HOG Vizualization:
 
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I trained a linear SVM in cell 4. I used spatial and color features, and the parameters are the following:
-```python
-spatial_size = (16, 16) # Spatial binning dimensions
-hist_bins = 64    # Number of histogram bins
-```
+I trained a linear SVM in cell 8 and achieved a accuracy of 98,59% on the test data set. I did not use spacial binning and histogram features.
 
 ###Sliding Window Search
 
